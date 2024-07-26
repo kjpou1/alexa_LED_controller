@@ -1,9 +1,11 @@
-# BASIC_ALEXA_ASK_SKILL_TEMPLATE
+# alexa_LED_controller
 
-This project is a basic template for creating an Alexa skill server using Bottle, ASK SDK, and supporting Gevent for running the server. It also includes environment configuration using dotenv and follows best practices for logging and configuration management.
+This project demonstrates how to control hardware components like LEDs on a Raspberry Pi through an Alexa skill, leveraging an IO Inventory module for scalable and maintainable device management. 
+
+It sets up an Alexa skill server using Bottle and ASK SDK, with support for Gevent to handle server operations. The configuration is managed using dotenv, and the project follows best practices for logging and configuration management.
 
 ## Table of Contents
-- [BASIC\_ALEXA\_ASK\_SKILL\_TEMPLATE](#basic_alexa_ask_skill_template)
+- [alexa\_LED\_controller](#alexa_LED_controller)
   - [Table of Contents](#table-of-contents)
   - [Installation](#installation)
   - [Configuration](#configuration)
