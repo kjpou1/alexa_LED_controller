@@ -42,8 +42,8 @@ It sets up an Alexa skill server using Bottle and ASK SDK, with support for Geve
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/kjpou1/BASIC_ALEXA_ASK_SKILL_TEMPLATE.git
-cd BASIC_ALEXA_ASK_SKILL_TEMPLATE
+git clone https://github.com/kjpou1/alexa_LED_controller.git
+cd alexa_LED_controller
 ```
 
 2. Create a virtual environment and activate it:
