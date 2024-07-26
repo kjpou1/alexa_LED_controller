@@ -297,6 +297,8 @@ The server is run using Gevent.
 python run.py
 ```
 
+### Updated Request Handlers Section
+
 ## Request Handlers
 
 The Alexa skill uses several request handlers to manage different types of requests. Here are the handlers included in this project:
@@ -325,9 +327,9 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
 ### CustomIntentHandler
 
-**Purpose**: Handles a custom intent specified in the configuration.
+**Purpose**: Handles a custom intent to control an LED based on user commands.
 
-**Response**: Responds with a personalized message if the `firstname` slot is provided, otherwise prompts the user to provide their name.
+**Response**: Turns the LED on or off based on the user's command.
 
 ```python
 class CustomIntentHandler(AbstractRequestHandler):
@@ -339,29 +341,43 @@ class CustomIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         logger.info("Handling %s", self.intent)
 
-        # Extract the firstname slot from the request
+        # Extract the OnOff slot value from the request
         slots = handler_input.request_envelope.request.intent.slots
-        firstname = slots.get("firstname").value if slots.get("firstname") else None
+        command = slots.get("OnOff").value if slots.get("OnOff") else None
 
-        # Render response using the JinjaTemplateRenderer
         renderer = JinjaTemplateRenderer()
 
-        if firstname is None:
-            # No name given, prompt user to provide their name
-            ask_name_text = renderer.render_string_template("ask_name")
+        if command is None:
+            # No command was given
+            reprompt_text = renderer.render_string_template("command_reprompt")
             return (
-                handler_input.response_builder.speak(ask_name_text)
-                .ask(ask_name_text)  # Keeps the session open to receive further input
+                handler_input.response_builder.speak(reprompt_text)
+                .ask(reprompt_text)
                 .response
             )
+        elif command in ['on', 'off']:
+            led_service = LEDService()
+            if command == "off":
+                # Turn off
+                led_service.turn_led_off()
+            else:
+                # Turn on
+                led_service.turn_led_on()
 
-        speech_text = renderer.render_string_template("hello", firstname=firstname)
-
-        return (
-            handler_input.response_builder.speak(speech_text)
-            .set_should_end_session(True)
-            .response
-        )
+            response_text = renderer.render_string_template('command', onOffCommand=command)
+            return (
+                handler_input.response_builder.speak(response_text)
+                .set_card(SimpleCard("Command", response_text))
+                .response
+            )
+        else:
+            # A valid command was not given
+            reprompt_text = renderer.render_string_template("command_reprompt")
+            return (
+                handler_input.response_builder.speak(reprompt_text)
+                .ask(reprompt_text)
+                .response
+            )
 ```
 
 ### SessionEndedRequestHandler
@@ -394,7 +410,7 @@ class FallbackIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         logger.info("Handling AMAZON.FallbackIntent")
         template_renderer = JinjaTemplateRenderer()
-        speech_text = template_renderer.render_string_template("ask_name_reprompt")
+        speech_text = template_renderer.render_string_template("command_reprompt")
         return (
             handler_input.response_builder.speak(speech_text)
             .ask(speech_text)  # Keeps the session open to receive further input
@@ -469,6 +485,7 @@ class StopIntentHandler(AbstractRequestHandler):
         )
 ```
 
+
 ## Alexa Skill Interaction Model
 
 The Alexa skill is defined by an interaction model, which specifies the intents, slots, and sample utterances that the skill recognizes.
@@ -481,7 +498,7 @@ Here is the JSON definition of the interaction model for this skill:
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "hello world",
+            "invocationName": "light wizard",
             "intents": [
                 {
                     "name": "AMAZON.CancelIntent",
@@ -496,52 +513,63 @@ Here is the JSON definition of the interaction model for this skill:
                     "samples": []
                 },
                 {
-                    "name": "HelloWorldIntent",
-                    "slots": [
-                        {
-                            "name": "firstname",
-                            "type": "AMAZON.FirstName",
-                            "samples": [
-                                "{firstname}"
-                            ]
-                        }
-                    ],
-                    "samples": [
-                        "say hello to {firstname}",
-                        "{firstname}",
-                        "say hi to {firstname}",
-                        "how are you",
-                        "say hi",
-                        "hi",
-                        "say hello world",
-                        "say hello"
-                    ]
-                },
-                {
                     "name": "AMAZON.NavigateHomeIntent",
                     "samples": []
                 },
                 {
                     "name": "AMAZON.FallbackIntent",
                     "samples": []
+                },
+                {
+                    "name": "OnOffIntent",
+                    "slots": [
+                        {
+                            "name": "OnOff",
+                            "type": "OnOffValue",
+                            "samples": [
+                                "{OnOff}"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "turn {OnOff}",
+                        "{OnOff}",
+                        "switch {OnOff}"
+                    ]
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "OnOffValue",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "off"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "on"
+                            }
+                        }
+                    ]
+                }
+            ]
         },
         "dialog": {
             "intents": [
                 {
-                    "name": "HelloWorldIntent",
+                    "name": "OnOffIntent",
                     "confirmationRequired": false,
                     "prompts": {},
                     "slots": [
                         {
-                            "name": "firstname",
-                            "type": "AMAZON.FirstName",
+                            "name": "OnOff",
+                            "type": "OnOffValue",
                             "confirmationRequired": false,
                             "elicitationRequired": true,
                             "prompts": {
-                                "elicitation": "Elicit.Slot.1653396877702.19112989472"
+                                "elicitation": "Elicit.Slot.1602566410765.1538124825991"
                             }
                         }
                     ]
@@ -551,21 +579,11 @@ Here is the JSON definition of the interaction model for this skill:
         },
         "prompts": [
             {
-                "id": "Elicit.Slot.1653396877702.19112989472",
-               
-
- "variations": [
+                "id": "Elicit.Slot.1602566410765.1538124825991",
+                "variations": [
                     {
                         "type": "PlainText",
-                        "value": "Who should I say hello to?"
-                    },
-                    {
-                        "type": "PlainText",
-                        "value": "Tell me who to say hello to"
-                    },
-                    {
-                        "type": "PlainText",
-                        "value": "What is your name"
+                        "value": "Do you want to turn your LED on or off"
                     }
                 ]
             }
