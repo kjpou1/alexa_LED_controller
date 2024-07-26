@@ -151,7 +151,7 @@ This will create the following files:
 > [!NOTE]  
 >  Ensure the `/etc/ssl/private` directory exists before running the script. This script creates self-signed certificates for testing purposes only and is not recommended for production environments.
 
-> [!WARN]  
+> [!WARNING]  
 >  Permissions are sometimes operating system dependent.  Follow your own permissions strategy.
 
 ## Troubleshooting SSL Configuration
