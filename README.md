@@ -113,64 +113,6 @@ The following environment variables are used to configure the application. These
 
 ## Generating a Self-Signed SSL Certificate
 
-For testing purposes, you can generate a self-signed SSL certificate using the provided `self-signed-certificate.sh` script. This is not recommended for production use.
-
-### Script: self-signed-certificate.sh
-
-```bash
-#!/bin/bash
-
-# Create necessary directories
-sudo mkdir -p /etc/ssl/private
-
-# Create a self signed SSL certificate.
-sudo openssl req -new -newkey rsa:4096 -x509 -days 3650 -nodes \
-             -subj /C=US/ST=NY/L=NY/O=NA/CN=localhost \
-             -keyout /etc/ssl/insecure.key -out /etc/ssl/private/insecure.pem
-
-# Create a DHParam file. Use 4096 bits instead of 2048 bits in production.
-sudo openssl dhparam -out /etc/ssl/dhparam.pem 2048
-```
-
-### Instructions
-
-1. Make the script executable:
-
-```bash
-chmod +x self-signed-certificate.sh
-```
-
-2. Run the script to generate the SSL certificate and private key:
-
-```bash
-./self-signed-certificate.sh
-```
-
-The `PermissionError: [Errno 13] Permission denied` error indicates that the process does not have the necessary permissions to access the certificate and key files. Here’s how you can resolve it:
-
-### Solution
-
-1. **Check File Permissions**
-   Ensure that the certificate and key files have the appropriate permissions.
-
-   ```bash
-   sudo chmod 644 /etc/ssl/private/insecure.pem
-   sudo chmod 644 /etc/ssl/insecure.key
-   ```
-
-2. **Ensure Ownership**
-   Ensure that the files are owned by the user running the application.
-
-   ```bash
-   sudo chown $(whoami):$(whoami) /etc/ssl/private/insecure.pem
-   sudo chown $(whoami):$(whoami) /etc/ssl/insecure.key
-   ```
-
-### Updated `README.md` for Permissions
-
-```markdown
-## Generating a Self-Signed SSL Certificate
-
 ### Ensure Directory and File Permissions
 
 1. Create necessary directories:
@@ -186,7 +128,7 @@ The `PermissionError: [Errno 13] Permission denied` error indicates that the pro
    ```
 
 3. Set appropriate permissions:
-    if PermissionError: [Errno 13] Permission denied
+    if `PermissionError: [Errno 13] Permission denied`
 
    ```bash
    sudo chmod 644 /etc/ssl/private/insecure.pem
@@ -194,7 +136,7 @@ The `PermissionError: [Errno 13] Permission denied` error indicates that the pro
    ```
 
 4. Ensure ownership:
-    PermissionError: [Errno 13] Permission denied
+    `PermissionError: [Errno 13] Permission denied`
 
    ```bash
    sudo chown $(whoami):$(whoami) /etc/ssl/private/insecure.pem
