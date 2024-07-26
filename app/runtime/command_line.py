@@ -11,10 +11,10 @@ class CommandLine:
             description="Run the application with specified arguments."
         )
         parser.add_argument(
-            "--server", "-s", type=str, default=DEFAULT_SERVER_HOST, help="Server host"
+            "--server", "-s", type=str, help="Server host"
         )
         parser.add_argument(
-            "--port", "-p", type=int, default=DEFAULT_SERVER_PORT, help="Server port"
+            "--port", "-p", type=int, help="Server port"
         )
 
         parser.add_argument(

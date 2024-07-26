@@ -136,5 +136,5 @@ cython_debug/
 # Test project data
 test_*
 
-# generated files
-data_files
+# ssl certificate files
+ssl/

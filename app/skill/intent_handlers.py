@@ -2,9 +2,11 @@ import logging
 
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.utils import is_intent_name, is_request_type
+from ask_sdk_model.ui import SimpleCard  
 
 from app.config.config import Config
 from app.helpers.template_renderer import JinjaTemplateRenderer
+from app.service.led_service import LEDService
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -14,7 +16,6 @@ logger = logging.getLogger(__name__)
 JinjaTemplateRenderer.initialize(
     template_folder="views", yaml_file="app/resources/templates.yaml"
 )
-
 
 class LaunchRequestHandler(AbstractRequestHandler):
     """Handler for Skill Launch."""
@@ -33,40 +34,81 @@ class LaunchRequestHandler(AbstractRequestHandler):
         )
 
 
+import logging
+from ask_sdk_core.dispatch_components import AbstractRequestHandler
+from ask_sdk_core.utils import is_intent_name
+from ask_sdk_model.ui import SimpleCard
+from app.service.led_service import LEDService
+from app.helpers.template_renderer import JinjaTemplateRenderer
+from app.config.config import Config
+
+logger = logging.getLogger(__name__)
+
 class CustomIntentHandler(AbstractRequestHandler):
-    """Handler for Custom Intent."""
+    """
+    Handler for Custom Intent. Manages the LED based on user commands.
+    """
 
     intent = Config().intent
 
     def can_handle(self, handler_input):
+        """
+        Determines if this handler can handle the given request.
+        
+        :param handler_input: The input request from Alexa.
+        :return: True if the intent matches, False otherwise.
+        """
         return is_intent_name(self.intent)(handler_input)
 
     def handle(self, handler_input):
+        """
+        Handles the custom intent to turn the LED on or off.
+        
+        :param handler_input: The input request from Alexa.
+        :return: A response indicating the result of the command.
+        """
         logger.info("Handling %s", self.intent)
 
-        # Extract the firstname slot from the request
+        # Extract the OnOff slot value from the request
         slots = handler_input.request_envelope.request.intent.slots
-        firstname = slots.get("firstname").value if slots.get("firstname") else None
+        command = slots.get("OnOff").value if slots.get("OnOff") else None
 
-        # Render response using the JinjaTemplateRenderer
         renderer = JinjaTemplateRenderer()
 
-        if firstname is None:
-            # No name given, prompt user to provide their name
-            ask_name_text = renderer.render_string_template("ask_name")
+        if command is None:
+            # No command was given
+            reprompt_text = renderer.render_string_template("command_reprompt")
             return (
-                handler_input.response_builder.speak(ask_name_text)
-                .ask(ask_name_text)  # Keeps the session open to receive further input
+                handler_input.response_builder
+                .speak(reprompt_text)
+                .ask(reprompt_text)
                 .response
             )
+        elif command in ['on', 'off']:
+            led_service = LEDService()
+            if command == "off":
+                # Turn off
+                led_service.turn_led_off()
+            else:
+                # Turn on
+                led_service.turn_led_on()
 
-        speech_text = renderer.render_string_template("hello", firstname=firstname)
-
-        return (
-            handler_input.response_builder.speak(speech_text)
-            .set_should_end_session(True)
-            .response
-        )
+            response_text = renderer.render_string_template('command', onOffCommand=command)
+            return (
+                handler_input.response_builder
+                .speak(response_text)
+                .set_card(SimpleCard("Command", response_text))
+                .response
+            )
+        else:
+            # A valid command was not given
+            reprompt_text = renderer.render_string_template("command_reprompt")
+            return (
+                handler_input.response_builder
+                .speak(reprompt_text)
+                .ask(reprompt_text)
+                .response
+            )
 
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
@@ -93,7 +135,7 @@ class FallbackIntentHandler(AbstractRequestHandler):
         logger.info("Handling AMAZON.FallbackIntent")
         # speech_text = "Sorry, I didn't understand that. Can you please rephrase?"
         template_renderer = JinjaTemplateRenderer()
-        speech_text = template_renderer.render_string_template("ask_name_reprompt")
+        speech_text = template_renderer.render_string_template("command_reprompt")
         return (
             handler_input.response_builder.speak(speech_text)
             .ask(speech_text)  # Keeps the session open to receive further input
